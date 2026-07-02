@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Log Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+KR:wght@400;500;600&display=swap');
+  :root{--void:#0B1526;--void-deep:#060A14;--panel:#101B30;--gold:#C9A24A;--gold-dim:rgba(201,162,74,.35);--parchment:#E9E2CE;--parchment-dim:#9BA3B5;--think:#8C93B8}
+  *{box-sizing:border-box}
+  body{margin:0;padding:40px 20px 80px;background-color:var(--void);background-image:linear-gradient(160deg,var(--void) 0%,var(--void-deep) 100%);color:var(--parchment);font-family:'EB Garamond','Noto Serif KR',serif;min-height:100vh}
+  .eyebrow{text-align:center;font-size:11px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:36px;opacity:.8}
+  .layout{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .panel{background:var(--panel);border:1px solid var(--gold-dim);border-radius:6px;padding:20px 22px 24px}
+  .panel h3{margin:0 0 14px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--parchment-dim);font-weight:500}
+  textarea{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--gold-dim);border-radius:4px;color:var(--parchment);font-family:'Noto Serif KR',serif;font-size:14.5px;line-height:1.8;padding:12px 14px;resize:vertical}
+  #rawInput{height:420px}
+  .preview-scroll{max-height:420px;overflow-y:auto;border-radius:4px;border:1px solid var(--gold-dim)}
+  /* 미리보기용 스타일 */
+  .la{position:relative;padding:44px 24px 48px;background-color:var(--void);background-image:radial-gradient(rgba(233,226,206,.55) .8px,transparent 1.2px),radial-gradient(rgba(233,226,206,.34) 1px,transparent 1.4px),radial-gradient(rgba(233,226,206,.22) 1.3px,transparent 1.8px),radial-gradient(rgba(233,226,206,.15) 1.7px,transparent 2.2px),linear-gradient(160deg,var(--void) 0%,var(--void-deep) 100%);background-size:97px 131px,173px 149px,221px 197px,311px 269px,100% 100%;background-position:0 0,38px 71px,12px 140px,160px 20px,0 0;color:var(--parchment);overflow:hidden}
+  .la .cm{position:absolute;top:-50px;right:-50px;width:220px;height:220px;opacity:.22;pointer-events:none}
+  .la .le{position:relative;z-index:1;padding-top:10px}
+  .la .dv{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+  .la .dv::before,.la .dv::after{content:"";flex:1;height:1px;background:var(--gold-dim)}
+  .la .dv svg{width:14px;height:14px;flex-shrink:0;opacity:.85}
+  .la .lb p{margin:0 0 1.1em;text-indent:1em;font-size:13px;line-height:1.85;letter-spacing:.01em;color:var(--parchment)}
+  .la .lb p:last-child{margin-bottom:0}
+  .la .lb .say{color:var(--gold);letter-spacing:.015em}
+  .la .lb .think{color:var(--think);font-style:italic}
+  .la .lb .hint{color:var(--parchment-dim);font-style:italic;text-indent:0}
+  /* 출력 코드 */
+  .output-panel{grid-column:1/-1}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{background:transparent;border:1px solid var(--gold-dim);color:var(--parchment-dim);padding:8px 14px;border-radius:4px;font-family:'Noto Serif KR',serif;font-size:13px;cursor:pointer}
+  .tab.active{color:var(--void);background:var(--gold);border-color:var(--gold)}
+  #outputCode{width:100%;height:220px;font-family:'Menlo','Consolas',monospace;font-size:12.5px;line-height:1.6;color:var(--parchment-dim)}
+  .output-footer{display:flex;align-items:center;gap:14px;margin-top:14px}
+  #copyBtn{background:var(--gold);color:#060A14;border:none;padding:10px 20px;border-radius:4px;font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;cursor:pointer}
+  #copyBtn:hover{opacity:.9}
+  #copyStatus{font-size:13px;color:var(--gold)}
+  @media(max-width:860px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Log → Tistory Code</div>
+
+<div class="layout">
+
+  <section class="panel">
+    <h3>원문 붙여넣기</h3>
+    <textarea id="rawInput" placeholder="여기에 로그 원문을 그대로 붙여넣으세요.
+
+문단은 빈 줄이든 줄바꿈만이든 자동으로 인식됩니다.
+&quot;대사&quot;는 금색으로, '생각'은 이탤릭으로 자동 강조됩니다."></textarea>
+  </section>
+
+  <section class="panel">
+    <h3>미리보기</h3>
+    <div class="preview-scroll">
+      <div class="la">
+        <svg class="cm" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <g fill="none" stroke="#C9A24A" stroke-width="0.6">
+            <circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="42"/>
+            <circle cx="100" cy="100" r="64"/><circle cx="100" cy="100" r="86"/>
+            <line x1="100" y1="0" x2="100" y2="200"/><line x1="0" y1="100" x2="200" y2="100"/>
+            <line x1="29" y1="29" x2="171" y2="171"/><line x1="171" y1="29" x2="29" y2="171"/>
+          </g>
+          <g fill="#C9A24A">
+            <circle cx="100" cy="14" r="1.4"/><circle cx="163" cy="52" r="1"/>
+            <circle cx="182" cy="121" r="1.2"/><circle cx="140" cy="178" r="1"/>
+            <circle cx="60" cy="182" r="1.3"/><circle cx="18" cy="130" r="1"/><circle cx="34" cy="58" r="1.2"/>
+          </g>
+        </svg>
+        <div class="le">
+          <div class="dv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C9A24A" stroke-width="1">
+              <path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z"/>
+            </svg>
+          </div>
+          <div class="lb" id="previewBody">
+            <p class="hint">여기에 미리보기가 표시됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel output-panel">
+    <h3>생성된 코드</h3>
+    <div class="tabs">
+      <button class="tab active" data-mode="entry">이 로그만 (기존 글에 추가할 때)</button>
+      <button class="tab" data-mode="full">전체 코드 (새 글을 만들 때)</button>
+    </div>
+    <textarea id="outputCode" readonly></textarea>
+    <div class="output-footer">
+      <button id="copyBtn">코드 복사</button>
+      <span id="copyStatus"></span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+
+/* ── 파싱 ── */
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hi(t){
+  return t
+    .replace(/([\u201c"][^\u201d"]*[\u201d"])/g,'<span style="color:#C9A24A;letter-spacing:.015em">$1</span>')
+    .replace(/([\u2018'][^\u2019']*[\u2019'])/g,'<span style="color:#8C93B8;font-style:italic">$1</span>');
+}
+function parse(raw){
+  var b=raw.split(/\n\s*\n/).map(function(x){return x.trim();}).filter(Boolean);
+  if(b.length<=1) b=raw.split(/\n/).map(function(x){return x.trim();}).filter(Boolean);
+  return b;
+}
+
+/* ── 코드 생성 (모든 스타일 인라인) ── */
+var S_WRAP='position:relative;max-width:660px;margin:0 auto;padding:64px 30px 72px;'+
+  'background-color:#0B1526;'+
+  'background-image:radial-gradient(rgba(233,226,206,.55) .8px,transparent 1.2px),'+
+  'radial-gradient(rgba(233,226,206,.34) 1px,transparent 1.4px),'+
+  'radial-gradient(rgba(233,226,206,.22) 1.3px,transparent 1.8px),'+
+  'radial-gradient(rgba(233,226,206,.15) 1.7px,transparent 2.2px),'+
+  'linear-gradient(160deg,#0B1526 0%,#060A14 100%);'+
+  'background-size:97px 131px,173px 149px,221px 197px,311px 269px,100% 100%;'+
+  'background-position:0 0,38px 71px,12px 140px,160px 20px,0 0;'+
+  'color:#E9E2CE;font-family:"EB Garamond","Noto Serif KR",serif;overflow:hidden;box-sizing:border-box';
+
+var S_CHART='position:absolute;top:-70px;right:-70px;width:300px;height:300px;opacity:.22;pointer-events:none';
+var S_ENTRY='position:relative;z-index:1;padding-top:34px;margin-bottom:50px';
+var S_DIV='display:flex;align-items:center;gap:14px;margin-bottom:32px';
+var S_LINE='flex:1;height:1px;background:rgba(201,162,74,.35)';
+var S_DSVG='width:14px;height:14px;flex-shrink:0;opacity:.85';
+var S_P='margin:0 0 1.1em;text-indent:1em;font-size:13px;line-height:1.85;letter-spacing:.01em;color:#E9E2CE';
+
+var FONT='<link rel="preconnect" href="https://fonts.googleapis.com">'+
+  '<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet">';
+
+var CHART_SVG=
+'<svg style="'+S_CHART+'" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'+
+'<g fill="none" stroke="#C9A24A" stroke-width="0.6">'+
+'<circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="42"/>'+
+'<circle cx="100" cy="100" r="64"/><circle cx="100" cy="100" r="86"/>'+
+'<line x1="100" y1="0" x2="100" y2="200"/><line x1="0" y1="100" x2="200" y2="100"/>'+
+'<line x1="29" y1="29" x2="171" y2="171"/><line x1="171" y1="29" x2="29" y2="171"/>'+
+'</g>'+
+'<g fill="#C9A24A">'+
+'<circle cx="100" cy="14" r="1.4"/><circle cx="163" cy="52" r="1"/>'+
+'<circle cx="182" cy="121" r="1.2"/><circle cx="140" cy="178" r="1"/>'+
+'<circle cx="60" cy="182" r="1.3"/><circle cx="18" cy="130" r="1"/><circle cx="34" cy="58" r="1.2"/>'+
+'</g></svg>';
+
+var DIVIDER=
+'<div style="'+S_DIV+'">'+
+'<span style="'+S_LINE+'"></span>'+
+'<svg style="'+S_DSVG+'" viewBox="0 0 24 24" fill="none" stroke="#C9A24A" stroke-width="1">'+
+'<path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z"/>'+
+'</svg>'+
+'<span style="'+S_LINE+'"></span>'+
+'</div>';
+
+function buildP(raw){
+  return parse(raw).map(function(p){
+    return '<p style="'+S_P+'">'+hi(esc(p))+'</p>';
+  }).join('\n');
+}
+
+function buildEntry(raw){
+  return '<div style="'+S_ENTRY+'">\n'+DIVIDER+'\n<div>\n'+buildP(raw)+'\n</div>\n</div>';
+}
+
+function buildFull(raw){
+  return FONT+'\n<div style="'+S_WRAP+'">\n'+CHART_SVG+'\n'+buildEntry(raw)+'\n</div>';
+}
+
+/* ── UI ── */
+var rawInput=document.getElementById('rawInput');
+var previewBody=document.getElementById('previewBody');
+var outputCode=document.getElementById('outputCode');
+var copyBtn=document.getElementById('copyBtn');
+var copyStatus=document.getElementById('copyStatus');
+var tabs=document.querySelectorAll('.tab');
+var mode='entry';
+
+function update(){
+  var raw=rawInput.value.trim();
+  if(!raw){
+    previewBody.innerHTML='<p class="hint">여기에 미리보기가 표시됩니다.</p>';
+    outputCode.value='';
+    return;
+  }
+  previewBody.innerHTML=parse(raw).map(function(p){return '<p>'+hi(esc(p))+'</p>';}).join('\n');
+  outputCode.value=mode==='entry'?buildEntry(raw):buildFull(raw);
+}
+
+rawInput.addEventListener('input',update);
+tabs.forEach(function(t){
+  t.addEventListener('click',function(){
+    tabs.forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    mode=t.dataset.mode;
+    update();
+  });
+});
+copyBtn.addEventListener('click',function(){
+  if(!outputCode.value)return;
+  navigator.clipboard.writeText(outputCode.value).then(function(){
+    copyStatus.textContent='복사됐어요!';
+    setTimeout(function(){copyStatus.textContent='';},2000);
+  }).catch(function(){
+    outputCode.select();document.execCommand('copy');
+    copyStatus.textContent='복사됐어요!';
+    setTimeout(function(){copyStatus.textContent='';},2000);
+  });
+});
+try{var sv=localStorage.getItem('logDraft');if(sv){rawInput.value=sv;update();}}catch(e){}
+rawInput.addEventListener('input',function(){try{localStorage.setItem('logDraft',rawInput.value);}catch(e){}});
+update();
+})();
+</script>
+</body>
+</html>
