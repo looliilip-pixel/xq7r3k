@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Log Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+KR:wght@400;500;600&display=swap');
+  :root{--void:#0B1526;--void-deep:#060A14;--panel:#101B30;--gold:#C9A24A;--gold-dim:rgba(201,162,74,.35);--parchment:#E9E2CE;--parchment-dim:#9BA3B5;--think:#8C93B8}
+  *{box-sizing:border-box}
+  body{margin:0;padding:40px 20px 80px;background-color:var(--void);background-image:linear-gradient(160deg,var(--void) 0%,var(--void-deep) 100%);color:var(--parchment);font-family:'EB Garamond','Noto Serif KR',serif;min-height:100vh}
+  .eyebrow{text-align:center;font-size:11px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:36px;opacity:.8}
+  .layout{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .panel{background:var(--panel);border:1px solid var(--gold-dim);border-radius:6px;padding:20px 22px 24px}
+  .panel h3{margin:0 0 14px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--parchment-dim);font-weight:500}
+  textarea{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--gold-dim);border-radius:4px;color:var(--parchment);font-family:'Noto Serif KR',serif;font-size:14.5px;line-height:1.8;padding:12px 14px;resize:vertical}
+  #rawInput{height:420px}
+  .preview-scroll{max-height:420px;overflow-y:auto;border-radius:4px;border:1px solid var(--gold-dim)}
+  .la{position:relative;padding:44px 24px 48px;background-color:var(--void);background-image:radial-gradient(rgba(233,226,206,.55) .8px,transparent 1.2px),radial-gradient(rgba(233,226,206,.34) 1px,transparent 1.4px),radial-gradient(rgba(233,226,206,.22) 1.3px,transparent 1.8px),radial-gradient(rgba(233,226,206,.15) 1.7px,transparent 2.2px),linear-gradient(160deg,var(--void) 0%,var(--void-deep) 100%);background-size:97px 131px,173px 149px,221px 197px,311px 269px,100% 100%;background-position:0 0,38px 71px,12px 140px,160px 20px,0 0;color:var(--parchment);overflow:hidden}
+  .la .cm{position:absolute;top:0;right:0;width:220px;height:220px;opacity:.2;pointer-events:none}
+  .la .le{position:relative;z-index:1;padding-top:10px}
+  .la .dv{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+  .la .dv::before,.la .dv::after{content:"";flex:1;height:1px;background:var(--gold-dim)}
+  .la .dv svg{width:14px;height:14px;flex-shrink:0;opacity:.85}
+  .la p{margin:0 0 1.1em;text-indent:1em;font-size:13px;line-height:1.85;letter-spacing:.01em;color:var(--parchment)}
+  .la p:last-child{margin-bottom:0}
+  .la .say{color:var(--gold);letter-spacing:.015em}
+  .la .think{color:var(--think);font-style:italic}
+  .la .hint{color:var(--parchment-dim);font-style:italic;text-indent:0}
+  .output-panel{grid-column:1/-1}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{background:transparent;border:1px solid var(--gold-dim);color:var(--parchment-dim);padding:8px 14px;border-radius:4px;font-family:'Noto Serif KR',serif;font-size:13px;cursor:pointer}
+  .tab.active{color:var(--void);background:var(--gold);border-color:var(--gold)}
+  #outputCode{width:100%;height:220px;font-family:'Menlo','Consolas',monospace;font-size:12.5px;line-height:1.6;color:var(--parchment-dim)}
+  .output-footer{display:flex;align-items:center;gap:14px;margin-top:14px}
+  #copyBtn{background:var(--gold);color:#060A14;border:none;padding:10px 20px;border-radius:4px;font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;cursor:pointer}
+  #copyBtn:hover{opacity:.9}
+  #copyStatus{font-size:13px;color:var(--gold)}
+  @media(max-width:860px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="eyebrow">Log → Tistory Code</div>
+<div class="layout">
+
+  <section class="panel">
+    <h3>원문 붙여넣기</h3>
+    <textarea id="rawInput" placeholder="여기에 로그 원문을 그대로 붙여넣으세요.
+
+문단은 빈 줄이든 줄바꿈만이든 자동으로 인식됩니다.
+&quot;대사&quot;는 금색으로, '생각'은 이탤릭으로 자동 강조됩니다."></textarea>
+  </section>
+
+  <section class="panel">
+    <h3>미리보기</h3>
+    <div class="preview-scroll">
+      <div class="la" id="laEl">
+        <div id="laDecoWrap" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0"></div>
+        <div class="le">
+          <div class="dv" id="laDivEl">
+            <span style="flex:1;height:1px;background:rgba(201,162,74,.35);display:block"></span>
+            <span style="color:#C9A24A;font-size:14px;line-height:1;flex-shrink:0;opacity:.85">✦</span>
+            <span style="flex:1;height:1px;background:rgba(201,162,74,.35);display:block"></span>
+          </div>
+          <div id="previewBody"><p class="hint">여기에 미리보기가 표시됩니다.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel output-panel">
+    <h3>생성된 코드</h3>
+    <div class="tabs">
+      <button class="tab active" data-mode="entry">이 로그만 (기존 글에 추가할 때)</button>
+      <button class="tab" data-mode="full">전체 코드 (새 글을 만들 때)</button>
+    </div>
+    <textarea id="outputCode" readonly></textarea>
+    <div class="output-footer">
+      <button id="copyBtn">코드 복사</button>
+      <span id="copyStatus"></span>
+    </div>
+  </section>
+
+</div>
+<script>
+(function(){
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hi(t){
+  return t
+    .replace(/([\u201c"][^\u201d"]*[\u201d"])/g,'<span style="color:#C9A24A;letter-spacing:.015em">$1</span>')
+    .replace(/([\u2018'][^\u2019']*[\u2019'])/g,'<span style="color:#8C93B8;font-style:italic">$1</span>');
+}
+function parse(raw){
+  var b=raw.split(/\n\s*\n/).map(function(x){return x.trim();}).filter(Boolean);
+  if(b.length<=1) b=raw.split(/\n/).map(function(x){return x.trim();}).filter(Boolean);
+  return b;
+}
+
+// ── 티스토리 출력 코드 ──
+// SVG는 position:absolute top:0 right:0 으로 (overflow:hidden에 안 잘리게)
+// 폰트는 @import style 태그로 (티스토리 허용)
+// script 태그 없음
+
+var FONT='<style>@import url(\'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+KR:wght@400;500;600&display=swap\');</style>';
+
+var S_WRAP=[
+  'position:relative',
+  'max-width:660px',
+  'margin:0 auto',
+  'padding:64px 30px 72px',
+  'background-color:#0B1526',
+  'background-image:radial-gradient(rgba(233,226,206,.55) .8px,transparent 1.2px),radial-gradient(rgba(233,226,206,.34) 1px,transparent 1.4px),radial-gradient(rgba(233,226,206,.22) 1.3px,transparent 1.8px),radial-gradient(rgba(233,226,206,.15) 1.7px,transparent 2.2px),linear-gradient(160deg,#0B1526 0%,#060A14 100%)',
+  'background-size:97px 131px,173px 149px,221px 197px,311px 269px,100% 100%',
+  'background-position:0 0,38px 71px,12px 140px,160px 20px,0 0',
+  'color:#E9E2CE',
+  "font-family:'EB Garamond','Noto Serif KR',serif",
+  'box-sizing:border-box'
+].join(';');
+
+var S_CHART='position:absolute;top:0;right:0;width:260px;height:260px;opacity:.2;pointer-events:none';
+var S_ENTRY='position:relative;z-index:1;padding-top:34px;margin-bottom:50px';
+var S_DIV='display:flex;align-items:center;gap:14px;margin-bottom:32px';
+var S_LINE='flex:1;height:1px;background:rgba(201,162,74,.35);display:block';
+var S_DSVG='width:14px;height:14px;flex-shrink:0;opacity:.85';
+var S_P='margin:0 0 1.1em;text-indent:1em;font-size:13px;line-height:1.85;letter-spacing:.01em;color:#E9E2CE';
+
+// 천체 장식 SVG 생성 함수 (W=너비, H=높이, lineY=구분선 Y)
+// 티스토리 출력용 고정값: W=660, H=추정 600, lineY=106 (padding64+paddingTop34+8)
+function buildDeco(W, H, lineY) {
+  var s = '<svg width="'+W+'px" height="'+H+'px" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:'+W+'px;height:'+H+'px;pointer-events:none;z-index:0">';
+
+  // 동심원 + 십자선 (우상단, 가로선=구분선 높이)
+  var cx=W, cy=lineY;
+  s+='<g fill="none" stroke="#C9A24A" stroke-width="0.7" opacity="0.2">';
+  [100,76,52,28].forEach(function(r){ s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"/>'; });
+  s+='<line x1="0" y1="'+cy+'" x2="'+W+'" y2="'+cy+'"/>';
+  s+='<line x1="'+cx+'" y1="0" x2="'+cx+'" y2="'+H+'"/>';
+  s+='<line x1="'+(cx-150)+'" y1="'+(cy-150)+'" x2="'+cx+'" y2="'+cy+'"/>';
+  s+='<line x1="'+(cx-150)+'" y1="'+(cy+150)+'" x2="'+cx+'" y2="'+cy+'"/>';
+  s+='</g>';
+
+  // 달 위상 (하단)
+  var moonY=H-36, phases=[0,0.15,0.3,0.5,0.7,0.85,1], sp=W/(phases.length+1);
+  s+='<g opacity="0.2" stroke="#C9A24A" stroke-width="0.8">';
+  phases.forEach(function(p,i){
+    var mx=sp*(i+1), r=11;
+    s+='<circle cx="'+mx+'" cy="'+moonY+'" r="'+r+'" fill="none"/>';
+    if(p>0&&p<1){
+      var sw=p<0.5?0:1, ex=r*(p<0.5?(1-(1-p*2)*2):((p*2-1)*2-1));
+      s+='<path d="M'+mx+' '+(moonY-r)+' A '+r+' '+r+' 0 0 1 '+mx+' '+(moonY+r)+' A '+Math.abs(ex)+' '+r+' 0 0 '+sw+' '+mx+' '+(moonY-r)+' Z" fill="#C9A24A" stroke="none"/>';
+    } else if(p===1){
+      s+='<circle cx="'+mx+'" cy="'+moonY+'" r="'+r+'" fill="#C9A24A" stroke="none"/>';
+    }
+  });
+  s+='</g>';
+
+  // 타원 궤도선
+  s+='<g fill="none" stroke="#C9A24A" stroke-width="0.6" opacity="0.1">';
+  s+='<ellipse cx="'+(W/2)+'" cy="'+(H*0.42)+'" rx="'+(W*0.44)+'" ry="'+(H*0.07)+'"/>';
+  s+='<ellipse cx="'+(W/2)+'" cy="'+(H*0.42)+'" rx="'+(W*0.3)+'" ry="'+(H*0.05)+'"/>';
+  s+='<circle cx="'+(W/2+W*0.44)+'" cy="'+(H*0.42)+'" r="4" fill="#C9A24A" opacity="0.25"/>';
+  s+='<circle cx="'+(W/2-W*0.3)+'" cy="'+(H*0.42)+'" r="3" fill="#C9A24A" opacity="0.2"/>';
+  s+='</g>';
+
+  // 방사선 별빛 (좌상단)
+  var rx=55, ry=55;
+  s+='<g stroke="#C9A24A" opacity="0.15">';
+  for(var a=0;a<360;a+=22.5){
+    var rad=a*Math.PI/180, len=(a%45===0)?52:28, sw=(a%45===0)?0.7:0.4;
+    s+='<line x1="'+rx+'" y1="'+ry+'" x2="'+(rx+Math.cos(rad)*len)+'" y2="'+(ry+Math.sin(rad)*len)+'" stroke-width="'+sw+'"/>';
+  }
+  s+='<circle cx="'+rx+'" cy="'+ry+'" r="2.5" fill="#C9A24A" opacity="0.5"/>';
+  s+='</g>';
+
+  // 별자리 점선 (좌측)
+  var pts=[[28,H*0.28],[44,H*0.35],[36,H*0.44],[52,H*0.52],[40,H*0.61],[26,H*0.7],[48,H*0.79]];
+  s+='<g opacity="0.18">';
+  for(var i=0;i<pts.length-1;i++){
+    s+='<line x1="'+pts[i][0]+'" y1="'+pts[i][1]+'" x2="'+pts[i+1][0]+'" y2="'+pts[i+1][1]+'" stroke="#C9A24A" stroke-width="0.5" stroke-dasharray="2,4"/>';
+  }
+  pts.forEach(function(p){ s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.5" fill="#C9A24A"/>'; });
+  s+='</g>';
+
+  // 좌하단 작은 동심원
+  s+='<g fill="none" stroke="#C9A24A" stroke-width="0.6" opacity="0.14">';
+  [58,40,24].forEach(function(r){ s+='<circle cx="0" cy="'+H+'" r="'+r+'"/>'; });
+  s+='</g>';
+
+  s+='</svg>';
+  return s;
+}
+var CHART = buildDeco(660, 600, 106);
+
+// 구분선: ✦ 유니코드 문자 사용
+var DIV='<div style="'+S_DIV+'">'+
+  '<span style="'+S_LINE+'"></span>'+
+  '<span style="color:#C9A24A;font-size:14px;line-height:1;flex-shrink:0;opacity:.85">✦</span>'+
+  '<span style="'+S_LINE+'"></span>'+
+  '</div>';
+
+function buildP(raw){
+  return parse(raw).map(function(p){
+    return '<p style="'+S_P+'">'+hi(esc(p))+'</p>';
+  }).join('\n');
+}
+
+function buildEntry(raw){
+  return '<div style="'+S_ENTRY+'">\n'+DIV+'\n<div>\n'+buildP(raw)+'\n</div>\n</div>';
+}
+
+function buildFull(raw){
+  var decoSvg = buildDeco(660, 600, 106);
+  return FONT+'\n<div style="'+S_WRAP+';min-height:600px">\n'+decoSvg+'\n'+buildEntry(raw)+'\n</div>';
+}
+
+
+// ── UI ──
+var rawInput=document.getElementById('rawInput');
+var previewBody=document.getElementById('previewBody');
+var outputCode=document.getElementById('outputCode');
+var copyBtn=document.getElementById('copyBtn');
+var copyStatus=document.getElementById('copyStatus');
+var tabs=document.querySelectorAll('.tab');
+var mode='entry';
+
+function update(){
+  var raw=rawInput.value.trim();
+  if(!raw){
+    previewBody.innerHTML='<p class="hint">여기에 미리보기가 표시됩니다.</p>';
+    outputCode.value='';
+    renderPreviewDeco();
+    return;
+  }
+  previewBody.innerHTML=parse(raw).map(function(p){return '<p>'+hi(esc(p))+'</p>';}).join('\n');
+  outputCode.value=mode==='entry'?buildEntry(raw):buildFull(raw);
+  setTimeout(renderPreviewDeco, 50);
+}
+
+function renderPreviewDeco(){
+  var la=document.getElementById('laEl');
+  var divEl=document.getElementById('laDivEl');
+  var wrap=document.getElementById('laDecoWrap');
+  if(!la||!divEl||!wrap) return;
+  var laRect=la.getBoundingClientRect();
+  var divRect=divEl.getBoundingClientRect();
+  var lineY=divRect.top-laRect.top+divRect.height/2;
+  var W=la.offsetWidth, H=la.offsetHeight||400;
+  wrap.innerHTML=buildDeco(W,H,lineY);
+}
+
+rawInput.addEventListener('input',update);
+tabs.forEach(function(t){
+  t.addEventListener('click',function(){
+    tabs.forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');mode=t.dataset.mode;update();
+  });
+});
+copyBtn.addEventListener('click',function(){
+  if(!outputCode.value)return;
+  navigator.clipboard.writeText(outputCode.value).then(function(){
+    copyStatus.textContent='복사됐어요!';
+    setTimeout(function(){copyStatus.textContent='';},2000);
+  }).catch(function(){
+    outputCode.select();document.execCommand('copy');
+    copyStatus.textContent='복사됐어요!';
+    setTimeout(function(){copyStatus.textContent='';},2000);
+  });
+});
+try{var sv=localStorage.getItem('logDraft');if(sv){rawInput.value=sv;update();}}catch(e){}
+rawInput.addEventListener('input',function(){try{localStorage.setItem('logDraft',rawInput.value);}catch(e){}});
+update();
+setTimeout(renderPreviewDeco, 200);
+})();
+</script>
+</body>
+</html>
